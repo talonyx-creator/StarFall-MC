@@ -93,7 +93,7 @@ export const botConfig = {
   embeds: {
     colors: {
       // Main brand colors.
-      primary: "#336699", 
+      primary: "#FF0000", 
       secondary: "#2F3136", 
 
       // Standard status colors for success/error/warning/info messages.
@@ -141,7 +141,7 @@ export const botConfig = {
     },
     footer: {
       // Default footer text used in bot embeds.
-      text: "Titan Bot",
+      text: "StarFall MC Bot",
       // Footer icon URL (null = no icon).
       icon: null,
     },
