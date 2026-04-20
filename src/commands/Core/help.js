@@ -73,7 +73,7 @@ async function createInitialHelpMenu() {
     ];
 
     const embed = createEmbed({ 
-        title: "🤖 StarFall MC Help Center",
+        title: "🤖 SkyFall MC Help Center",
         description: "Your all-in-one Discord companion for moderation, economy, fun, and server management.",
         color: 'primary'
     });
