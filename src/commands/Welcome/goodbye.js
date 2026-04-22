@@ -31,7 +31,11 @@ export default {
                 .addBooleanOption(option =>
                     option.setName('ping')
                         .setDescription('Whether to ping the user in the goodbye message')
-                        .setRequired(false))),
+                        .setRequired(false)))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('disable')
+                .setDescription('Disable the goodbye message system')),
 
     async execute(interaction) {
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
@@ -55,6 +59,39 @@ export default {
 
         const subcommand = options.getSubcommand();
 
+        if (subcommand === 'disable') {
+            try {
+                await updateWelcomeConfig(client, guild.id, {
+                    goodbyeEnabled: false,
+                    goodbyeChannelId: null,
+                    leaveMessage: null,
+                    goodbyePing: false,
+                    leaveEmbed: null
+                });
+
+                logger.info(`[Goodbye] Goodbye system disabled by ${interaction.user.tag} for guild ${guild.name} (${guild.id})`);
+
+                return await InteractionHelper.safeEditReply(interaction, {
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor(getColor('success'))
+                            .setTitle('✅ Goodbye Disabled')
+                            .setDescription('Goodbye system has been fully removed and disabled.')
+                    ]
+                });
+            } catch (error) {
+                logger.error(`[Goodbye] Failed to disable goodbye system for guild ${guild.id}:`, error);
+
+                return await InteractionHelper.safeEditReply(interaction, {
+                    embeds: [errorEmbed(
+                        'Disable Failed',
+                        'An error occurred while disabling the goodbye system.'
+                    )],
+                    flags: MessageFlags.Ephemeral
+                });
+            }
+        }
+
         if (subcommand === 'setup') {
             const channel = options.getChannel('channel');
             const message = options.getString('message');
@@ -62,18 +99,17 @@ export default {
             const ping = options.getBoolean('ping') ?? false;
 
             const existingConfig = await getWelcomeConfig(client, guild.id);
-            if (existingConfig?.goodbyeChannelId) {
+            if (existingConfig?.goodbyeChannelId && existingConfig?.goodbyeEnabled) {
                 logger.info(`[Goodbye] Setup blocked because config already exists in channel ${existingConfig.goodbyeChannelId} for guild ${guild.id}`);
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [errorEmbed(
                         'Goodbye Setup Already Exists',
-                        `Goodbye is already configured for <#${existingConfig.goodbyeChannelId}>. Use **/goodbye config** to customize channel, message, ping, or image.`
+                        `Goodbye is already configured for <#${existingConfig.goodbyeChannelId}>. Disable it first before setting it up again.`
                     )],
                     flags: MessageFlags.Ephemeral
                 });
             }
 
-            
             if (!message || message.trim().length === 0) {
                 logger.warn(`[Goodbye] Empty message provided by ${interaction.user.tag} in ${guild.name}`);
                 return await InteractionHelper.safeEditReply(interaction, {
@@ -82,14 +118,13 @@ export default {
                 });
             }
 
-            
             if (image) {
                 try {
                     new URL(image);
                 } catch (e) {
                     logger.warn(`[Goodbye] Invalid image URL provided by ${interaction.user.tag}: ${image}`);
                     return await InteractionHelper.safeEditReply(interaction, {
-                        embeds: [errorEmbed('Invalid Image URL', 'Please provide a valid image URL (must start with http:// or https://')],
+                        embeds: [errorEmbed('Invalid Image URL', 'Please provide a valid image URL (must start with http:// or https://)')],
                         flags: MessageFlags.Ephemeral
                     });
                 }
@@ -102,7 +137,7 @@ export default {
                     leaveMessage: message,
                     goodbyePing: ping,
                     leaveEmbed: {
-                        title: "Goodbye {user.tag}",
+                        title: 'Goodbye {user.tag}',
                         description: message,
                         color: getColor('error'),
                         footer: `Goodbye from ${guild.name}!`,
@@ -126,7 +161,7 @@ export default {
                         { name: 'Ping User', value: ping ? '✅ Yes' : '❌ No' },
                         { name: 'Status', value: '✅ Enabled' }
                     )
-                    .setFooter({ text: 'Tip: Use /goodbye config to customize goodbye settings' });
+                    .setFooter({ text: 'Use /goodbye disable to turn it off' });
 
                 if (image) {
                     embed.setImage(image);
@@ -147,6 +182,3 @@ export default {
         }
     },
 };
-
-
-
