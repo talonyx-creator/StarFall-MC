@@ -1,8 +1,5 @@
-import { SlashCommandBuilder, PermissionFlagsBits, AttachmentBuilder } from 'discord.js';
-import { createEmbed } from '../../utils/embeds.js';
+import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import { withErrorHandling } from '../../utils/errorHandler.js';
-import { InteractionHelper } from '../../utils/interactionHelper.js';
-import { logger } from '../../utils/logger.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -23,18 +20,11 @@ export default {
         ),
 
     execute: withErrorHandling(async (interaction, config, client) => {
-        const deferred = await InteractionHelper.safeDefer(interaction, true);
-        if (!deferred) return;
+        await interaction.deferReply({ ephemeral: true });
 
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-            const embed = createEmbed({
-                title: '❌ Permission Denied',
-                description: 'Only members with Administrator permission can use this command.',
-            });
-
-            return InteractionHelper.safeEditReply(interaction, {
-                embeds: [embed],
-                ephemeral: true
+            return interaction.editReply({
+                content: '❌ Only administrators can use this command.'
             });
         }
 
@@ -42,14 +32,8 @@ export default {
         const image = interaction.options.getAttachment('image');
 
         if (!text && !image) {
-            const embed = createEmbed({
-                title: '⚠️ Missing Content',
-                description: 'Please provide text, an image, or both.',
-            });
-
-            return InteractionHelper.safeEditReply(interaction, {
-                embeds: [embed],
-                ephemeral: true
+            return interaction.editReply({
+                content: '⚠️ Please provide text, an image, or both.'
             });
         }
 
@@ -65,20 +49,8 @@ export default {
 
         await interaction.channel.send(messageOptions);
 
-        const embed = createEmbed({
-            title: '✅ Message Sent',
-            description: 'Your message has been sent successfully through the bot.',
-        });
-
-        logger.info('[BOT] Message sent using /send', {
-            admin: interaction.user.id,
-            guildId: interaction.guildId,
-            channelId: interaction.channelId
-        });
-
-        await InteractionHelper.safeEditReply(interaction, {
-            embeds: [embed],
-            ephemeral: true
+        return interaction.editReply({
+            content: '✅ Message sent successfully.'
         });
 
     }, { command: 'send' })
