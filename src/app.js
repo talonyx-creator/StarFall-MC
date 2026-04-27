@@ -12,7 +12,7 @@ import { logger, startupLog, shutdownLog } from './utils/logger.js';
 import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/commandLoader.js';
-
+import { startMinecraftStatus } from './minecraftStatus.js';
 class TitanBot extends Client {
   constructor() {
     super({
@@ -95,7 +95,7 @@ class TitanBot extends Client {
       startupLog(
         `ONLINE ✅ | ${this.commands.size} commands loaded | ${handlerSummary} | Database: ${databaseMode}`
       );
-      
+      startMinecraftStatus(this)
       this.setupCronJobs();
     } catch (error) {
       logger.error('Failed to start bot:', error);
