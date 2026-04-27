@@ -95,7 +95,8 @@ class TitanBot extends Client {
       startupLog(
         `ONLINE ✅ | ${this.commands.size} commands loaded | ${handlerSummary} | Database: ${databaseMode}`
       );
-      this.setupCronJobs();
+     startAutoMcStatus(this);
+     this.setupCronJobs();
     } catch (error) {
       logger.error('Failed to start bot:', error);
       process.exit(1);
